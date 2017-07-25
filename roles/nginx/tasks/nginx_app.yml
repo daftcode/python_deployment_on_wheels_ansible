@@ -1,0 +1,36 @@
+---
+
+- block:
+
+  - name: NGINX | Copy {{ app_name }} authentication configuration
+    template:
+      src: "{{ src_http_auth_config_template }}"
+      dest: "{{ nginx_config_dir_path }}/{{ app_name }}_httpasswd"
+    when: app_basic_auth == True
+    notify:
+      - NGINX | Handler | Restart nginx server
+
+  - name: NGINX | Copy {{ app_name }} configuration
+    template:
+      src: "{{ src_config_template }}"
+      dest: "{{ nginx_config_sites_available_path }}/{{ app_name }}.conf"
+    notify:
+      - NGINX | Handler | Restart nginx server
+
+  - name: NGINX | Create symlink to {{ app_name }}.conf
+    file:
+      src: "{{ nginx_config_sites_available_path }}/{{ app_name }}.conf"
+      dest: "{{ nginx_config_sites_enabled_path }}/{{ app_name }}.conf"
+      state: link
+    notify:
+      - NGINX | Handler | Restart nginx server
+
+  become: yes
+  become_user: "root"
+  tags:
+    - nginx
+    - nginx_app
+    - nginx_config
+
+# run pending nginx restart handler
+- meta: flush_handlers

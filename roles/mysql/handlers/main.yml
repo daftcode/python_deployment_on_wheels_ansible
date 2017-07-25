@@ -1,0 +1,5 @@
+- name: MySQL | Handler | Restart mysql server
+  service:
+    name: mysql
+    state: restarted
+  become: yes

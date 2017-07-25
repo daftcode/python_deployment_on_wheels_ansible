@@ -1,0 +1,28 @@
+upstream test_app {
+    server {{ app_socket }};
+}
+
+server {
+  listen {{ app_external_tcp_ports.test_app }};
+  server_name {{ root_url }};
+  charset utf-8;
+
+  error_log {{ nginx_log }};
+
+  underscores_in_headers on;
+
+  location / {
+    include       uwsgi_params;
+    uwsgi_pass    test_app;
+    {% if app_basic_auth == True %}
+      auth_basic    "Test it Bro !";
+      auth_basic_user_file  {{ app_name }}_httpasswd;
+    {% endif %}
+  }
+
+  location /api {
+    include       uwsgi_params;
+    uwsgi_pass    test_app;
+  }
+
+}

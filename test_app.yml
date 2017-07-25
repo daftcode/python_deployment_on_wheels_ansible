@@ -1,0 +1,22 @@
+---
+# This playbook deploys the whole application stack in this site.
+
+- name: deploy test_app
+  hosts: devbro
+  vars:
+    upgrade_dist: no
+    app_basic_auth: yes
+    app_gitlab_packages_on_remote: no
+    app_producton: false
+  vars_files:
+    - "vars/test_app.yml"
+  roles:
+    - role: wheel
+    - role: users
+    - role: common
+    - role: folder_structure
+    - role: nginx
+    - role: redis
+    - role: mysql
+    - role: apps/test_app
+    - role: log_deployment

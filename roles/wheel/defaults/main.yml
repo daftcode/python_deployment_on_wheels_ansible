@@ -1,0 +1,17 @@
+# Role_defaults:
+app_name: python_project
+tmp_dir: "{{ playbook_dir }}/.tmp"
+
+# LOCAL only paths for WHEEL and TEMP stuff
+wheel_app_dir: '{{ tmp_dir }}/{{ app_name }}'
+wheel_app_env_dir: "{{ wheel_app_dir }}/virtualenv"
+wheel_app_wheelbase_dir: "{{ wheel_app_dir }}/wheelbase"
+wheel_app_wheelbase_archive_dir: "{{ wheel_app_dir }}/wheelbase_archive"
+wheel_app_wheelbase_packs_dir: "{{ wheel_app_dir }}/wheelbase_packs"
+
+app_wheel_dirs:
+  - "{{ tmp_dir }}"
+  - "{{ wheel_app_dir }}"
+  - "{{ wheel_app_wheelbase_dir }}"
+  - "{{ wheel_app_wheelbase_packs_dir }}"
+  - "{{ wheel_app_wheelbase_archive_dir }}"

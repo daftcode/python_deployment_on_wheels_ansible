@@ -1,0 +1,153 @@
+---
+
+- block:
+
+  - name: test_app | Create test_app Virtualenv
+    pip:
+      virtualenv: "{{ app_env_dir }}"
+      virtualenv_python: "{{ app_python_version }}"
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - pip
+      - setuptools
+
+  - name: test_app | Install TestApp from wheel
+    include_role:
+      name: wheel
+      tasks_from: wheel_install
+    notify:
+      - test_app | Handler | Restart test_app Application
+
+  - name: test_app | Install PasteScript
+    pip:
+      virtualenv: "{{ app_env_dir }}"
+      name: "PasteScript"
+
+  - name: test_app | Check if MySQL user existss
+    mysql_user:
+      login_user: root
+      login_password: "{{ database_password.root }}"
+      name: "{{ app_db_user }}"
+      password: "{{ database_password.test_app }}"
+      priv: '*.*:ALL'
+      state: present
+    become_user: root
+    register: db_created
+
+  - name: test_app | Create MySQL database exists
+    mysql_db:
+      login_user: "{{ app_db_user }}"
+      login_password: "{{ database_password.test_app }}"
+      name: "{{ app_db_name }}"
+      target: "{{ app_code_dir }}/deployment/sql_migrations/{{ item }}"
+      state: present
+    become_user: root
+    when: db_created.changed
+    with_items:
+      - migration_00.sql
+      - migration_01.sql
+      - migration_02.sql
+      - migration_03.sql
+
+  - name: test_app | Create clients dir
+    file:
+      dest: "{{ clients_cfg_dir }}"
+      state: directory
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+
+  - name: test_app | Create products dir
+    file:
+      dest: "{{ products_cfg_dir }}"
+      state: directory
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+
+  - name: test_app | Copy application configuration
+    template:
+      src: "{{ app_local_dir }}/deployment/examples/testing.example.ini.j2"
+      dest: "{{ app_cfg }}"
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+
+  - name: test_app | Copy application celery configuration
+    template:
+      src: "{{ app_local_dir }}/deployment/examples/testing.example.ini.j2"
+      dest: "{{ celery_app_config_file }}"
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+      - celery
+
+  - name: test_app | Link clients configuration
+    copy:
+      src: "{{ item }}"
+      dest: "{{ clients_cfg_dir }}/{{ item | basename }}"
+    with_fileglob:
+      - "{{ app_local_dir }}/deployment/examples/stage_clients/*"
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+
+  - name: test_app | Link products configuration
+    copy:
+      src: "{{ item }}"
+      dest: "{{ products_cfg_dir }}/{{ item | basename }}"
+    with_fileglob:
+      - "{{ app_local_dir }}/deployment/examples/products/*"
+    notify:
+      - test_app | Handler | Restart test_app Application
+    tags:
+      - config
+
+  - name: test_app | Copy service file
+    template:
+      src: test_app.service.j2
+      dest: "{{ app_service_file }}"
+    notify:
+      - SystemCTL | Handler | Reload
+      - test_app | Handler | Restart test_app Application
+    become_user: root
+
+
+  - name: test_app | Add NGINX app confign
+    include_role:
+      name: nginx
+      tasks_from: nginx_app
+    vars:
+      src_config_template: "nginx/{{ app_name }}.conf.j2"
+      src_http_auth_config_template: "nginx/{{ app_name }}_httpasswd.j2"
+    tags:
+      - nginx
+      - nginx_config
+      - nginx_app
+
+  - name: test_app | Force reload the service
+    debug:
+      msg: Force reload test_app.service
+    changed_when: true
+    notify:
+      - test_app | Handler | Restart test_app Application
+    when: reboot_app_tag is defined and reboot_app_tag
+    tags:
+      - reboot
+      - reload
+      - restart
+
+  become: yes
+  become_user: "{{ app_user }}"
+  tags:
+    - app
+    - wheel_deploy
+
+# run pending nginx restart handler
+- meta: flush_handlers

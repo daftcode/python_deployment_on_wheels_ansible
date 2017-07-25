@@ -1,0 +1,13 @@
+[webservers]
+dev1_staging ansible_port=2200 ansible_host=34.248.230.218 ansible_ssh_user=wojteq
+local ansible_connection=local ansible_ssh_user=wojtek ansible_sudo_pass=Lato2013
+
+[devbro]
+dev1_staging
+
+[localhosts]
+local
+
+[dev1_xenials]
+dev1-staging
+

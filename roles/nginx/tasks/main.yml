@@ -1,0 +1,62 @@
+---
+
+- name: NGINX | Install nginx
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - nginx
+  become: yes
+  tags:
+    - nginx
+
+- block:
+
+  - name: NGINX | Copy DH group
+    template:
+      src: dhparam.pem.j2
+      dest: "{{ nginx_config_dir_path }}/dhparam.pem"
+      force: yes
+    notify:
+      - NGINX | Handler | Restart nginx server
+
+  - name: NGINX | Copy SSL params
+    template:
+      src: ssl_params.conf.j2
+      dest: "{{ nginx_config_dir_path }}/ssl_params.conf"
+      force: yes
+    notify:
+      - NGINX | Handler | Restart nginx server
+
+  - name: NGINX | Copy nginx configuration
+    template:
+      src: nginx.conf.j2
+      dest: "{{ nginx_config_file_path }}"
+    notify:
+      - NGINX | Handler | Restart nginx server
+    tags:
+      - nginx_cfg
+
+  - name: NGINX | Make sure Nginx conf folders are present
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0766
+    with_items:
+      - "{{ nginx_config_sites_enabled_path }}"
+      - "{{ nginx_config_sites_available_path }}"
+      - "{{ nginx_log_path }}"
+
+  - name: NGINX | Make sure Nginx Default server is not present
+    file:
+      path: "{{ nginx_config_sites_enabled_path }}/default.conf"
+      state: absent
+      remote_src: yes
+
+  become: yes
+  tags:
+    - nginx
+
+# run pending nginx restart handler
+- meta: flush_handlers

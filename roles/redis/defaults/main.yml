@@ -1,0 +1,6 @@
+---
+##### role defaults for redis
+
+# REDIS
+redis_user: redis
+redis_user_group: redis

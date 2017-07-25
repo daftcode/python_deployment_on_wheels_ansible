@@ -1,0 +1,35 @@
+---
+
+- name: MaxMind | Fetch latest GIT repository branch {{ maxmind_git_branch }}
+  git:
+    repo: "{{ maxmind_git_repo }}"
+    dest: "{{ tmp_maxmind_dir }}"
+    accept_hostkey: yes
+    version: "{{ maxmind_git_branch }}"
+    ssh_opts: "-o StrictHostKeyChecking=no"
+    update: yes
+    force: yes
+  tags:
+    - maxmind
+
+  delegate_to: local
+  run_once: true
+
+- block:
+  - name: MaxMind | Make sure GeoIp folder is present
+    file:
+      path: "{{ maxmind_dir }}"
+      state: directory
+      mode: 0755
+
+  - name: MaxMind | Synchronize latest GeoIp with {{ app_name }}
+    copy:
+      src: "{{ item }}"
+      dest: "{{ maxmind_dir }}/{{ item | basename}}"
+    with_fileglob:
+      - "{{ tmp_maxmind_dir }}/*.mmdb"
+
+  become: yes
+  become_user: "{{ app_user }}"
+  tags:
+    - maxmind

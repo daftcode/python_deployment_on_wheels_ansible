@@ -1,0 +1,34 @@
+---
+
+- block:
+  - name: REDIS | Install redis-server
+    apt:
+      name: redis-server
+      state: latest
+      update_cache: yes
+    register: redis_install_result
+    tags:
+      - redis
+
+
+  - name: REDIS | Configure redis-server max databases count
+    lineinfile:
+      path: /etc/redis/redis.conf
+      regexp: '^databases '
+      line: 'databases {{ redis_databases_count }}'
+      owner: redis
+      group: redis
+      mode: 0640
+    notify:
+      - REDIS | Handler | Restart redis server
+
+
+  - name: REDIS | Start redis server
+    service:
+      name: redis-server
+      state: started
+
+  become: yes
+  tags:
+    - redis
+- meta: flush_handlers

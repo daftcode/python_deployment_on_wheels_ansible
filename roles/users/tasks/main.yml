@@ -1,0 +1,57 @@
+---
+
+- block:
+  - name: Users | Create {{ app_user }} group
+    group:
+      name: "{{ app_user_group }}"
+      state: present
+
+  - name: Users | Create {{ app_user }} user
+    user:
+      name: "{{ app_user }}"
+      createhome: yes
+      group: "{{ app_user_group }}"
+      generate_ssh_key: no
+
+  become: yes
+  tags:
+    - users
+
+- block:
+  - name: Users | Create {{ app_user }} ssh folder
+    file:
+      path: "{{ app_user_dir }}/.ssh"
+      state: directory
+      mode: 0700
+      owner: "{{ app_user }}"
+      group: "{{ app_user_group }}"
+
+  - name: Users | Copy {{ app_user }} user ssh config
+    template:
+      src: "config.j2"
+      dest: '{{ app_user_dir }}/.ssh/config'
+      mode: 0644
+      owner: "{{ app_user }}"
+      group: "{{ app_user_group }}"
+
+  - name: Users | Copy {{ app_user }} user private key
+    template:
+      src: "id_rsa.j2"
+      dest: '{{ app_user_dir }}/.ssh/id_rsa'
+      mode: 0600
+      owner: "{{ app_user }}"
+      group: "{{ app_user_group }}"
+
+  - name: Users | Copy {{ app_user }} user public key
+    template:
+      src: "id_rsa.pub.j2"
+      dest: '{{ app_user_dir }}/.ssh/id_rsa.pub'
+      mode: 0644
+      owner: "{{ app_user }}"
+      group: "{{ app_user_group }}"
+
+  when: app_gitlab_packages_on_remote
+  become: yes
+  tags:
+    - users
+    - ssh

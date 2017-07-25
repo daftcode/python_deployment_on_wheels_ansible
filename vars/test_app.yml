@@ -1,0 +1,83 @@
+app_name: test_app
+app_user: test_app
+app_user_group: test_app
+app_user_dir: "/home/{{ app_user }}"
+
+app_env_name: "production"
+app_python_version: python3.6
+
+app_dir: "{{ app_user_dir }}/{{ app_name }}"
+app_env_dir: "{{ app_dir }}/virtualenv"
+app_exec_file: "{{ app_env_dir }}/bin/uwsgi"
+app_service_file: "/lib/systemd/system/{{ app_name }}.service"
+
+app_var_dir: "{{ app_dir }}/var"
+app_config_dir: "{{ app_var_dir }}/config"
+app_script_dir: "{{ app_var_dir }}/script"
+app_run_dir: "{{ app_var_dir }}/run"
+app_log_dir: "{{ app_var_dir }}/log"
+
+dependency_lib_dir: "{{ app_dir }}/dependency_lib/"
+app_code_dir: "{{ app_dir }}/{{ app_name }}"
+
+app_socket: "127.0.0.1:8000"
+app_cfg: "{{ app_config_dir }}/production.ini"
+
+nginx_log: "{{ app_log_dir }}/{{ app_name }}.nginx.log"
+uwsgi_log: "{{ app_log_dir }}/{{ app_name }}.uwsgi.log"
+app_log: "{{ app_user_dir }}/{{ app_name }}.app.log"
+app_pid: "{{ app_run_dir }}/{{ app_name }}.uwsgi.pid"
+
+app_wheelbase_dir: "{{ app_dir }}/wheelbase"
+app_wheelbase_archive_dir: "{{ app_dir }}/wheelbase_archive"
+
+# MaxMind GeoIp
+app_use_remote_geoip: false
+
+app_dirs:
+  - "{{ app_dir }}"
+  - "{{ app_env_dir }}"
+  - "{{ app_var_dir }}"
+  - "{{ app_config_dir }}"
+  - "{{ app_script_dir }}"
+  - "{{ app_run_dir }}"
+  - "{{ app_log_dir }}"
+  - "{{ app_code_dir }}"
+  - "{{ app_wheelbase_dir }}"
+  - "{{ app_wheelbase_archive_dir }}"
+
+app_default_git_branch: master
+app_git_branch: "{{ app_default_git_branch }}"
+dependency_lib_git_branch: "{{ app_git_branch }}"
+dependency_lib_git_repo: "ssh://git@gitlab.tut/dependency_lib.git"
+app_git_repo: "ssh://git@gitlab.tut/test_app.git"
+
+app_db_name: "{{ database_name.test_app }}"
+app_db_user: "{{ database_user.test_app }}"
+
+app_db_url: "mysql://{{ app_db_user }}:{{ database_password.test_app }}@{{ app_db_host }}/{{ app_db_name }}"
+app_session_redis_url: "redis://127.0.0.1:6379/{{ redis_databases.test_app }}"
+
+# wheel vars
+app_run_tests: yes
+
+app_extra_packages:
+  - PasteScript
+
+app_git_repos:
+  dependency_lib:
+    repo: "{{ dependency_lib_git_repo }}"
+    branch: "{{ dependency_lib_git_branch }}"
+  test_app:
+    repo: "{{ app_git_repo }}"
+    branch: "{{ app_git_branch }}"
+
+# linux dependencies:
+app_environ_dependencies:
+  - python3-pip
+  - python3-virtualenv
+  - mysql-client
+  - libmysqlclient-dev
+  - python-mysqldb
+
+app_local_dir: "{{ tmp_dir }}/{{ app_name }}/{{ app_name }}"

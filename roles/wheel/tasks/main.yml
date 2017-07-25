@@ -1,0 +1,75 @@
+---
+
+- block:
+
+  - name: "{{ app_name }} | Wheel | Ensure that local tmp folder exist"
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0755
+    with_flattened:
+      - "{{ app_wheel_dirs }}"
+
+  - name: "{{ app_name }} | Wheel | Fetch latest {{ app_name }} repository branch {{ app_git_branch }}"
+    git:
+      repo: "{{ item.value.repo }}"
+      dest: "{{ wheel_app_dir }}/{{ item.key }}"
+      accept_hostkey: yes
+      version: "{{ item.value.branch }}"
+      ssh_opts: "-o StrictHostKeyChecking=no"
+      update: yes
+      force: yes
+    with_dict: "{{ app_git_repos }}"
+    tags:
+      - app
+      - config
+
+  - name: "{{ app_name }} | Wheel | Create {{ app_name }} Virtualenv"
+    pip:
+      virtualenv: "{{ wheel_app_env_dir }}"
+      virtualenv_python: "{{ app_python_version }}"
+      name: "{{ item }}"
+    with_items:
+      - pip
+      - setuptools
+
+  - name: "{{ app_name }} | Wheel | Install {{ app_name }} "
+    command: bash -lc "{{ wheel_app_env_dir }}/bin/python setup.py develop"
+    args:
+      chdir: "{{ wheel_app_dir }}/{{ item.key }}"
+    with_dict: "{{ app_git_repos }}"
+
+  - name: "{{ app_name }} | Wheel | Gather facts"
+    shell: "ls {{ wheel_app_wheelbase_dir }}"
+    register: app_wheelbase_files
+
+  - name: "{{ app_name }} | Wheel | Move existing wheelbase to wheelbase archive"
+    shell: "mv {{ wheel_app_wheelbase_dir }}/* {{ wheel_app_wheelbase_archive_dir }}"
+    when: app_wheelbase_files.stdout_lines
+
+  - name: "{{ app_name }} | Wheel | Update wheelbase"
+    shell: ". {{ wheel_app_env_dir }}/bin/activate && pip wheel . -w {{ wheel_app_wheelbase_dir }} --find-links=file://{{ wheel_app_wheelbase_dir }}"
+    args:
+      chdir: "{{ wheel_app_dir }}/{{ item.key }}"
+    with_dict: "{{ app_git_repos }}"
+
+  - name: "{{ app_name }} | Wheel | Get release timestamp"
+    command: date +%Y%m%d%H%M%S
+    register: release_timestamp
+
+  - name: "{{ app_name }} | Wheel | Pack wheelbase: {{ app_name }}_{{ release_timestamp.stdout }}.tar.gz"
+    archive:
+      path: "{{ wheel_app_wheelbase_dir }}/*"
+      dest: "{{ wheel_app_wheelbase_packs_dir }}/{{ app_name }}_{{ release_timestamp.stdout }}.tar.gz"
+      format: gz
+
+  - name: "{{ app_name }} | Wheel | Copy latest wheelbase pack to latest.tar.gz for convinience"
+    copy:
+      src: "{{ wheel_app_wheelbase_packs_dir }}/{{ app_name }}_{{ release_timestamp.stdout }}.tar.gz"
+      dest: "{{ wheel_app_wheelbase_packs_dir }}/latest.tar.gz"
+
+  delegate_to: local
+  run_once: true
+  tags:
+    - wheel
+    - wheel_deploy

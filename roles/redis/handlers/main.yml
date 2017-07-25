@@ -1,0 +1,6 @@
+---
+- name: REDIS | Handler | Restart redis server
+  service:
+    name: redis-server
+    state: restarted
+  become: yes

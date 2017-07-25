@@ -1,0 +1,14 @@
+---
+
+maxmind_git_branch: master
+maxmind_git_repo: git@gitlab.tut:maxmind_geoip.git
+
+maxmind_dir: "{{ app_dir }}/maxmind_geoip"
+
+maxmind_city_db: "{{ maxmind_dir }}/GeoIP2-City.mmdb"
+maxmind_country_db: "{{ maxmind_dir }}/GeoIP2-Country.mmdb"
+
+tmp_maxmind_dir: "{{ tmp_dir }}/maxmind_geoip"
+
+tmp_maxmind_city_db: "{{ tmp_maxmind_dir }}/GeoIP2-City.mmdb"
+tmp_maxmind_country_db: "{{ tmp_maxmind_dir }}/GeoIP2-Country.mmdb"

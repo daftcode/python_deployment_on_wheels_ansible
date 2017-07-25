@@ -1,0 +1,19 @@
+[Unit]
+Description={{ app_name }} service
+After=syslog.target
+
+[Service]
+Type=forking
+User={{ app_name }}
+Group={{ app_user }}
+WorkingDirectory={{ app_env_dir }}
+PIDFile={{ app_pid }}
+Environment=""
+ExecStart={{ app_exec_file }} --ini-paste-logged {{ app_cfg }}
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

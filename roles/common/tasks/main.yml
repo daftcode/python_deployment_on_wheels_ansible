@@ -1,0 +1,47 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+
+- block:
+  - name: Common | Update and upgrade all packages
+    apt:
+      upgrade: dist
+      update_cache: yes
+      cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+    when: upgrade_dist
+    tags:
+      - upgrade_dist
+
+  - name: Common | Install utils
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_flattened:
+      - htop
+      - git
+      - unzip
+      - python-pip
+      - python-virtualenv
+      - "{{ app_environ_dependencies }}"
+
+  - name: Common | Install Python Commons
+    pip:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+      - pip
+      - setuptools
+      - pexpect
+
+  - name: Common | Install Python3 Commons
+    pip:
+      name: "{{ item }}"
+      state: latest
+      executable: pip3
+    with_items:
+      - pip
+      - setuptools
+
+  become: yes
+  tags:
+    - common
+

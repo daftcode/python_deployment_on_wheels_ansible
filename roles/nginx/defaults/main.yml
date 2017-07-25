@@ -1,0 +1,13 @@
+---
+##### role defaults redmine
+
+# NGINX
+http_port: 80
+https_port: 443
+nginx_config_dir_path: /etc/nginx
+nginx_config_file_path: "{{ nginx_config_dir_path }}/nginx.conf"
+nginx_config_sites_path: "{{ nginx_config_dir_path }}/sites-enabled"
+nginx_config_sites_enabled_path: "{{ nginx_config_sites_path }}"
+nginx_config_sites_available_path: "{{ nginx_config_dir_path }}/sites-available"
+nginx_config_d_path: "{{ nginx_config_dir_path }}/conf.d"
+nginx_log_path: /usr/share/nginx/logs

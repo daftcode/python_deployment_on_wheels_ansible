@@ -1,0 +1,49 @@
+---
+
+- block:
+  - name: MySQL | Update apt cache
+    apt:
+      update_cache: yes
+      cache_valid_time: "{{apt_cache_valid_time | default (3600)}}"
+
+  - name: MySQL | Set MySQL root password before installing
+    debconf:
+      name: 'mysql-server'
+      question: 'mysql-server/root_password'
+      value: '{{ database_password.root }}'
+      vtype: 'password'
+
+  - name: MySQL | Set MySQL root password before installing
+    debconf:
+      name: 'mysql-server'
+      question: 'mysql-server/root_password_again'
+      value: '{{ database_password.root }}'
+      vtype: 'password'
+
+  - name: MySQL | Install mysql
+    apt:
+      name: "{{ item }}"
+    with_items:
+      - mysql-server
+
+  - name: MySQL | Check root database user
+    mysql_user:
+      login_user: root
+      login_password: '{{ database_password.root }}'
+      name: root
+      state: present
+
+  - name: MySQL | Copy my.cnf
+    template:
+      src: my.cnf.j2
+      dest: "/etc/mysql/conf.d/my.cnf"
+      force: yes
+    notify:
+      - MySQL | Handler | Restart mysql server
+
+  become: yes
+  tags:
+    - mysql
+
+# run pending nginx restart handler
+- meta: flush_handlers

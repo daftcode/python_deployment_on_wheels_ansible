@@ -1,0 +1,29 @@
+---
+
+- block:
+  - name: "{{ app_name }} | Gather facts"
+    command: bash -lc "ls {{ app_wheelbase_dir }}"
+    register: app_wheelbase_files
+
+  - name: "{{ app_name }} | Move existing wheelbase to wheelbase archive"
+    shell: "mv {{ app_wheelbase_dir }}/* {{ app_wheelbase_archive_dir }}"
+    when: app_wheelbase_files.stdout_lines
+
+  - name: "{{ app_name }} | Send and unpack latest {{ app_name }} compilation"
+    unarchive:
+      src: "{{ wheel_app_wheelbase_packs_dir }}/latest.tar.gz"
+      dest: "{{ app_wheelbase_dir }}"
+
+  - name: "{{ app_name }} | Install {{ app_name }} and all depencies from wheel"
+    pip:
+      virtualenv: "{{ app_env_dir }}"
+      name: "{{ item.key }}"
+      state: forcereinstall
+      extra_args: "--no-index --upgrade --use-wheel --find-links={{ app_wheelbase_dir }}"
+    with_dict: "{{ app_git_repos }}"
+
+  become: yes
+  become_user: "{{ app_user }}"
+  tags:
+    - app
+    - wheel_deploy

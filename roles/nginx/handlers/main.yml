@@ -1,0 +1,6 @@
+---
+- name: NGINX | Handler | Restart nginx server
+  service:
+    name: nginx
+    state: restarted
+  become: yes

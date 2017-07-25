@@ -1,0 +1,7 @@
+---
+- name: test_app | Handler | Restart test_app Application
+  service:
+    name: test_app
+    state: restarted
+  become: yes
+  become_user: root

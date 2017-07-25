@@ -1,0 +1,37 @@
+---
+apt_cache_valid_time: 3600
+root_url: http://127.0.0.1
+
+app_external_tcp_ports:
+  test_app: 9200
+
+
+redis_databases_count: 16
+redis_databases:
+  test_app: 0
+
+
+database_user:
+  test_app: test_app
+
+database_name:
+  test_app: test_app
+
+database_password:
+  test_app: 12345
+
+app_basic_auth: False
+
+nginx_auth:
+  test_app: "a:a"
+
+# Enalbe option for user to connect to DCX Gitlab
+app_gitlab_packages_on_remote: true
+# Default for most apps
+
+app_run_tests: true
+
+tmp_dir: "{{ playbook_dir }}/.tmp"
+
+app_list:
+  - test_app

@@ -1,0 +1,11 @@
+
+- name: Common | Make sure {{ app_name }} folders are present
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items: "{{ app_dirs }}"
+  become_user: "{{ app_user }}"
+  become: yes
+  tags:
+    - folders

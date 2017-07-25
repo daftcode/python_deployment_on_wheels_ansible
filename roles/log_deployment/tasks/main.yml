@@ -1,0 +1,19 @@
+---
+- block:
+
+  - name: Log | Get deploy timestamp
+    command: date "+%Y-%m-%d %H:%M:%S"
+    register: log_timestamp
+
+  - name: Log | Log this deployment to file
+    lineinfile:
+      dest: "{{ app_log_dir }}/{{ app_name }}.deployment.log"
+      insertafter: "EOF"
+      create: yes
+      line: "{{ log_timestamp.stdout }} by: {{ ansible_ssh_user }} app: {{ app_name }}:{{ app_git_branch }}"
+
+  become: yes
+  become_user: "{{ app_user }}"
+  tags:
+    - always
+    - log

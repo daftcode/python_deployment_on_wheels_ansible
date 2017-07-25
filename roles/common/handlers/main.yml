@@ -1,0 +1,5 @@
+---
+- name: SystemCTL | Handler | Reload
+  command: bash -lc "systemctl daemon-reload"
+  become: yes
+  become_user: root
